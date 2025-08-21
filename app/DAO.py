@@ -14,8 +14,8 @@ async def create_task(db: AsyncSession, payload: schemas.TaskCreate) -> models.T
     return task
 
 
-async def get_task(db: AsyncSession, task_id: str) -> models.Task | None:
-    return await db.get(models.Task, task_id)
+async def get_task(db: AsyncSession, task_uuid: str) -> models.Task | None:
+    return await db.get(models.Task, task_uuid)
 
 
 async def list_tasks(db: AsyncSession, limit: int = 50, offset: int = 0, status_filter: schemas.TaskStatus | None = None) -> List[models.Task]:

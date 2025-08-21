@@ -16,11 +16,11 @@ async def create_task(payload: schemas.TaskCreate, db: AsyncSession = Depends(ge
     return await DAO.create_task(db, payload)
 
 
-@router.get("/{task_id}", response_model=schemas.TaskOut)
-async def get_task(task_id: str, db: AsyncSession = Depends(get_session)):
-    task = await DAO.get_task(db, task_id)
+@router.get("/{task_uuid}", response_model=schemas.TaskOut)
+async def get_task(task_uuid: str, db: AsyncSession = Depends(get_session)):
+    task = await DAO.get_task(db, task_uuid)
     if not task:
-         HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail="Task not found")
     return task
 
 
@@ -34,17 +34,17 @@ async def list_tasks(
     return await DAO.list_tasks(db, limit=limit, offset=offset, status_filter=status_filter)
 
 
-@router.put("/{task_id}", response_model=schemas.TaskOut)
-async def update_task(task_id: str, payload: schemas.TaskUpdate, db: AsyncSession = Depends(get_session)):
-    task = await DAO.get_task(db, task_id)
+@router.put("/{task_uuid}", response_model=schemas.TaskOut)
+async def update_task(task_uuid: str, payload: schemas.TaskUpdate, db: AsyncSession = Depends(get_session)):
+    task = await DAO.get_task(db, task_uuid)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return await DAO.update_task(db, task, payload)
 
 
-@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_task(task_id: str, db: AsyncSession = Depends(get_session)):
-    task = await DAO.get_task(db, task_id)
+@router.delete("/{task_uuid}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(task_uuid: str, db: AsyncSession = Depends(get_session)):
+    task = await DAO.get_task(db, task_uuid)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     await DAO.delete_task(db, task)

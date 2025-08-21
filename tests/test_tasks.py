@@ -1,69 +1,86 @@
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 
-from app.main import app
-from app.database import Base, get_session
+@pytest.mark.asyncio
+async def test_crud_flow(async_client: AsyncClient):
+    # Create
+    r = await async_client.post("/tasks/", json={"title": "Test", "description": "Desc"})
+    assert r.status_code == 201, r.text
+    item = r.json()
+    task_uuid = item["uuid"]
+    assert item["status"] == "created"
 
+    # Get
+    r = await async_client.get(f"/tasks/{task_uuid}")
+    assert r.status_code == 200
+    assert r.json()["title"] == "Test"
 
-# Тестовая БД — SQLite (async) файл, чтобы избежать проблем с in-memory и несколькими соединениями
-TEST_DB_URL = "sqlite+aiosqlite:///./test_tasks.db"
-engine = create_async_engine(TEST_DB_URL, future=True)
-TestingSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
+    # Put
+    r = await async_client.put(f"/tasks/{task_uuid}", json={"status": "in_progress", "title": "New"})
+    assert r.status_code == 200
+    assert r.json()["status"] == "in_progress"
+    assert r.json()["title"] == "New"
 
+    # Delete
+    r = await async_client.delete(f"/tasks/{task_uuid}")
+    assert r.status_code == 204
 
-@pytest.fixture(autouse=True, scope="module")
-async def setup_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    # Get wrong uuid
+    r = await async_client.get(f"/tasks/{task_uuid}")
+    assert r.status_code == 404
 
+    # Put wrong uuid
+    r = await async_client.put(f"/tasks/{task_uuid}", json={"status": "in_progress", "title": "New"})
+    assert r.status_code == 404
 
-# Переопределяем зависимость БД
-@app.dependency_overrides[get_session]
-async def override_get_db():
-    async with TestingSessionLocal() as session:
-        yield session
+    # Get wrong uuid
+    r = await async_client.delete(f"/tasks/{task_uuid}")
+    assert r.status_code == 404
+    
+@pytest.mark.asyncio
+async def test_create_invalid_task(async_client: AsyncClient):
+    # Missing title
+    r = await async_client.post("/tasks/", json={"description": "No title"})
+    assert r.status_code == 422 
 
+    # Empty payload
+    r = await async_client.post("/tasks/", json={})
+    assert r.status_code == 422
 
-@pytest.mark.anyio
-async def test_crud_flow():
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        # Create
-        r = await client.post("/tasks/", json={"title": "Test", "description": "Desc"})
-        assert r.status_code == 201, r.text
-        item = r.json()
-        task_id = item["id"]
-        assert item["status"] == "created"
+@pytest.mark.asyncio
+async def test_list_tasks_and_filter(async_client: AsyncClient):
+    tasks = [
+        {"title": "Task1", "description": "A", "status": "created"},
+        {"title": "Task2", "description": "B", "status": "in_progress"},
+        {"title": "Task3", "description": "C", "status": "done"},
+    ]
+    for t in tasks:
+        await async_client.post("/tasks/", json=t)
 
+    # List all tasks
+    r = await async_client.get("/tasks/")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) >= 3
 
-        # Get
-        r = await client.get(f"/tasks/{task_id}")
-        assert r.status_code == 200
-        assert r.json()["title"] == "Test"
+    # Filter by status
+    r = await async_client.get("/tasks/?status_filter=in_progress")
+    assert r.status_code == 200
+    data = r.json()
+    assert all(task["status"] == "in_progress" for task in data)
 
+@pytest.mark.asyncio
+async def test_pagination(async_client: AsyncClient):
+    for i in range(5):
+        await async_client.post("/tasks/", json={"title": f"T{i}", "description": "Desc"})
 
-        # List
-        r = await client.get("/tasks/?limit=10&offset=0")
-        assert r.status_code == 200
-        assert any(t["id"] == task_id for t in r.json())
+    # Limit
+    r = await async_client.get("/tasks/?limit=2")
+    assert r.status_code == 200
+    assert len(r.json()) == 2
 
-
-        # Update
-        r = await client.put(f"/tasks/{task_id}", json={"status": "in_progress", "title": "New"})
-        assert r.status_code == 200
-        assert r.json()["status"] == "in_progress"
-        assert r.json()["title"] == "New"
-
-
-        # Delete
-        r = await client.delete(f"/tasks/{task_id}")
-        assert r.status_code == 204
-
-
-        # Not found after delete
-        r = await client.get(f"/tasks/{task_id}")
-        assert r.status_code == 404
+    # Offset
+    r = await async_client.get("/tasks/?limit=2&offset=2")
+    assert r.status_code == 200
+    assert len(r.json()) == 2  
