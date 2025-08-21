@@ -24,4 +24,5 @@ http://localhost:8080
 ## Увидеть работу приложения можно по адресу: 
 ```bash
 http://aazatserver.ru:8000/docs
+http://aazatserver.ru:8080
 ```
