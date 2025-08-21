@@ -34,14 +34,14 @@ services:
     restart: unless-stopped
     command: uvicorn app.main:app --host ${UVICORN_HOST} --port ${UVICORN_PORT} ${UVICORN_RELOAD:+--reload}
 
-  # adminer:
-  #   image: adminer
-  #   container_name: adminer
-  #   restart: always
-  #   ports:
-  #     - 8080:8080
-  #   depends_on:
-  #     - db
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
 
 volumes:
   pgdata:
