@@ -44,7 +44,7 @@ async def update_task(task_id: str, payload: schemas.TaskUpdate, db: AsyncSessio
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(task_id: str, db: AsyncSession = Depends(get_session)):
-    task = DAO.get_task(db, task_id)
+    task = await DAO.get_task(db, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     await DAO.delete_task(db, task)
