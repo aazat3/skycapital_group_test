@@ -1,7 +1,9 @@
 from fastapi import FastAPI
-from config import settings
-from database import init_db
-from routers import tasks
+
+
+from app.config import settings
+from app.database import init_db
+from app.routers import tasks
 
 
 app = FastAPI(title=settings.PROJECT_NAME)

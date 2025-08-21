@@ -23,12 +23,16 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=200)
     description: Optional[str] = Field(default=None, max_length=2000)
-    status: Optional[TaskStatus] = None
+    status: Optional[TaskStatus] = Field(
+        default=None,
+        description="Выберите статус из: created, in_progress, completed"
+    )
 
 
 class TaskOut(TaskBase):
-    id: str
+    uuid: str
+
+    class Config:
+        from_attributes = True
 
 
-class Config:
-    from_attributes = True

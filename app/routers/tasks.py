@@ -3,9 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 
-from database import get_session
-import schemas
-import DAO
+from app.database import get_session
+from app import schemas
+from app import DAO
 
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -29,14 +29,14 @@ async def list_tasks(
     db: AsyncSession = Depends(get_session),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    status_filter: schemas.TaskStatus | None = Query(None, description="Filte by status"),
+    status_filter: schemas.TaskStatus | None = Query(None, description="Filter by status"),
     ):
     return await DAO.list_tasks(db, limit=limit, offset=offset, status_filter=status_filter)
 
 
 @router.put("/{task_id}", response_model=schemas.TaskOut)
 async def update_task(task_id: str, payload: schemas.TaskUpdate, db: AsyncSession = Depends(get_session)):
-    task = DAO.get_task(db, task_id)
+    task = await DAO.get_task(db, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return await DAO.update_task(db, task, payload)

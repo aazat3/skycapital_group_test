@@ -1,8 +1,10 @@
 import uuid
 from sqlalchemy import String, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
-from database import Base
 from enum import Enum
+
+
+from app.database import Base
 
 
 class TaskStatus(str, Enum):

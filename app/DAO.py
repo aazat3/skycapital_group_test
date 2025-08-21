@@ -3,7 +3,7 @@ from sqlalchemy import select
 from typing import List
 
 
-import models, schemas
+from app import models, schemas
 
 
 async def create_task(db: AsyncSession, payload: schemas.TaskCreate) -> models.Task:

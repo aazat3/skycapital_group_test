@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from collections.abc import AsyncGenerator
 
 
-from config import settings
+from app.config import settings
 
 
 DATABASE_URL_asyncpg = settings.DATABASE_URL_asyncpg
