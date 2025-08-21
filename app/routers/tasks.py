@@ -34,7 +34,7 @@ async def list_tasks(
     return await DAO.list_tasks(db, limit=limit, offset=offset, status_filter=status_filter)
 
 
-@router.put("/{task_uuid}", response_model=schemas.TaskOut)
+@router.patch("/{task_uuid}", response_model=schemas.TaskOut)
 async def update_task(task_uuid: str, payload: schemas.TaskUpdate, db: AsyncSession = Depends(get_session)):
     task = await DAO.get_task(db, task_uuid)
     if not task:

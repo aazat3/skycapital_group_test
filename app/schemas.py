@@ -25,7 +25,6 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = Field(default=None, max_length=2000)
     status: Optional[TaskStatus] = Field(
         default=None,
-        description="Выберите статус из: created, in_progress, completed"
     )
 
 

@@ -16,8 +16,8 @@ async def test_crud_flow(async_client: AsyncClient):
     assert r.status_code == 200
     assert r.json()["title"] == "Test"
 
-    # Put
-    r = await async_client.put(f"/tasks/{task_uuid}", json={"status": "in_progress", "title": "New"})
+    # Patch
+    r = await async_client.patch(f"/tasks/{task_uuid}", json={"status": "in_progress", "title": "New"})
     assert r.status_code == 200
     assert r.json()["status"] == "in_progress"
     assert r.json()["title"] == "New"
@@ -30,8 +30,8 @@ async def test_crud_flow(async_client: AsyncClient):
     r = await async_client.get(f"/tasks/{task_uuid}")
     assert r.status_code == 404
 
-    # Put wrong uuid
-    r = await async_client.put(f"/tasks/{task_uuid}", json={"status": "in_progress", "title": "New"})
+    # Patch wrong uuid
+    r = await async_client.patch(f"/tasks/{task_uuid}", json={"status": "in_progress", "title": "New"})
     assert r.status_code == 404
 
     # Get wrong uuid
@@ -55,8 +55,7 @@ async def test_list_tasks_and_filter(async_client: AsyncClient):
         {"title": "Task2", "description": "B", "status": "in_progress"},
         {"title": "Task3", "description": "C", "status": "done"},
     ]
-    for t in tasks:
-        await async_client.post("/tasks/", json=t)
+    [await async_client.post("/tasks/", json=t) for t in tasks]
 
     # List all tasks
     r = await async_client.get("/tasks/")
@@ -72,8 +71,7 @@ async def test_list_tasks_and_filter(async_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_pagination(async_client: AsyncClient):
-    for i in range(5):
-        await async_client.post("/tasks/", json={"title": f"T{i}", "description": "Desc"})
+    [await async_client.post("/tasks/", json={"title": f"T{i}", "description": "Desc"}) for i in range(5)]   
 
     # Limit
     r = await async_client.get("/tasks/?limit=2")
